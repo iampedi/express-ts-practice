@@ -3,6 +3,7 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import todoRoutes from "./routes/todoRoutes";
 import { logger } from "./middleware/logger";
+import { errorHandler } from "./middleware/errorHandler";
 
 dotenv.config();
 
@@ -19,6 +20,8 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/todos", todoRoutes);
+
+app.use(errorHandler);
 
 // Start Server
 app.listen(PORT, () => {

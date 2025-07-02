@@ -1,6 +1,6 @@
 // src/controllers/todoController.ts
 
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { Todo } from "../types/todo";
 
 let todos: Todo[] = [
@@ -14,14 +14,13 @@ export const getTodos = (req: Request, res: Response) => {
 };
 
 // Create Todo
-export const createTodo = (req: Request, res: Response) => {
+export const createTodo = (req: Request, res: Response, next: NextFunction) => {
   const { title } = req.body;
 
   if (!title || typeof title !== "string") {
-    res
-      .status(400)
-      .json({ message: "Title is required and must be a string." });
-    return;
+    const error = new Error("Title is required and must be a string.");
+    res.status(400);
+    return next(error);
   }
 
   const newTodo: Todo = {
