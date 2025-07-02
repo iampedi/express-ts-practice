@@ -9,66 +9,77 @@ let todos: Todo[] = [
 ];
 
 // Get Todos
-export const getTodos = (req: Request, res: Response) => {
-  res.status(200).json(todos);
+export const getTodos = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.status(200).json(todos);
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Create Todo
 export const createTodo = (req: Request, res: Response, next: NextFunction) => {
-  const { title } = req.body;
+  try {
+    const { title } = req.body;
+    if (!title || typeof title !== "string") {
+      throw new Error("Title is required and must be a string.");
+    }
 
-  if (!title || typeof title !== "string") {
-    const error = new Error("Title is required and must be a string.");
-    res.status(400);
-    return next(error);
+    const newTodo: Todo = {
+      id: Date.now(),
+      title,
+      completed: false,
+    };
+
+    todos.push(newTodo);
+    res.status(201).json(newTodo);
+  } catch (error) {
+    next(error);
   }
-
-  const newTodo: Todo = {
-    id: Date.now(),
-    title,
-    completed: false,
-  };
-
-  todos.push(newTodo);
-
-  res.status(201).json(newTodo);
 };
 
 // Edit Todo
-export const updateTodo = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  const { title, completed } = req.body;
+export const updateTodo = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = Number(req.params.id);
+    const { title, completed } = req.body;
 
-  if (typeof title !== "string" || typeof completed !== "boolean") {
-    res.status(400).json({
-      message: "Both title (string) and completed (boolean) are required.",
-    });
-    return;
+    if (typeof title !== "string" || typeof completed !== "boolean") {
+      res.status(400).json({
+        message: "Both title (string) and completed (boolean) are required.",
+      });
+      return;
+    }
+
+    const todo = todos.find((t) => t.id === id);
+    if (!todo) {
+      res.status(404).json({ message: "Todo not found." });
+      return;
+    }
+
+    todo.title = title;
+    todo.completed = completed;
+
+    res.status(200).json(todo);
+  } catch (error) {
+    next(error);
   }
-
-  const todo = todos.find((t) => t.id === id);
-  if (!todo) {
-    res.status(404).json({ message: "Todo not found." });
-    return;
-  }
-
-  todo.title = title;
-  todo.completed = completed;
-
-  res.status(200).json(todo);
 };
 
 // Delete Todo
-export const deleteTodo = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+export const deleteTodo = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = Number(req.params.id);
+    const index = todos.findIndex((t) => t.id === id);
 
-  const index = todos.findIndex((t) => t.id === id);
+    if (index === -1) {
+      res.status(404).json({ message: "Todo not found." });
+      return;
+    }
 
-  if (index === -1) {
-    res.status(404).json({ message: "Todo not found." });
-    return;
+    const deleted = todos.splice(index, 1)[0];
+    res.status(200).json({ message: "Todo deleted.", todo: deleted });
+  } catch (error) {
+    next(error);
   }
-
-  const deleted = todos.splice(index, 1)[0];
-  res.status(200).json({ message: "Todo deleted.", todo: deleted });
 };
